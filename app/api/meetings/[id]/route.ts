@@ -13,7 +13,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Invalid meeting id.' }, { status: 400 });
   }
 
-  const meeting = getMeetingById(numericId);
+  const meeting = await getMeetingById(numericId);
 
   if (!meeting) {
     return NextResponse.json({ error: 'Meeting not found.' }, { status: 404 });

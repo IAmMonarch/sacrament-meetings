@@ -3,8 +3,8 @@ import { getCurrentMeeting } from '@/lib/meetings-db';
 
 export const dynamic = 'force-dynamic';
 
-export default function CurrentMeetingPage() {
-  const meeting = getCurrentMeeting();
+export default async function CurrentMeetingPage() {
+  const meeting = await getCurrentMeeting();
 
   if (!meeting) {
     notFound();
