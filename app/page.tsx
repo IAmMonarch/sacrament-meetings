@@ -31,7 +31,7 @@ export default function Home() {
           </div>
         </div>
         <Image
-          src="/chapel-hero.svg"
+          src="/chapel-hero.png"
           alt="Illustration of a meetinghouse chapel with a steeple at sunrise"
           width={960}
           height={540}
