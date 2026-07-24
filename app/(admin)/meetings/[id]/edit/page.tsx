@@ -1,12 +1,30 @@
+import { notFound } from 'next/navigation';
+import MeetingForm from '@/components/MeetingForm';
+import { updateMeeting } from '@/lib/actions';
+import { getMeetingById } from '@/lib/meetings-db';
+
 interface EditMeetingPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function EditMeetingPage({ params }: EditMeetingPageProps) {
   const { id } = await params;
+  const numericId = Number(id);
+
+  if (!Number.isInteger(numericId)) {
+    notFound();
+  }
+
+  const meeting = await getMeetingById(numericId);
+
+  if (!meeting) {
+    notFound();
+  }
+
   return (
-    <h1 className="font-serif text-xl font-semibold">
-      Edit Meeting {id} — Coming in Week 04
-    </h1>
+    <div>
+      <h1 className="mb-6 font-serif text-xl font-semibold">Edit Meeting</h1>
+      <MeetingForm action={updateMeeting.bind(null, numericId)} meeting={meeting} submitLabel="Save Changes" />
+    </div>
   );
 }

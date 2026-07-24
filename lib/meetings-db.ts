@@ -116,20 +116,82 @@ export async function getCurrentMeeting(referenceDate: Date = new Date()): Promi
   return rows[0] ? mapRowToMeeting(rows[0]) : undefined;
 }
 
-// Mutation functions are stubbed out for now and will be wired to the
-// database in Week 04 when the create/edit forms are built.
+export async function addMeeting(meeting: Omit<SacramentMeeting, 'id'>): Promise<SacramentMeeting> {
+  const rows = (await sql()`
+    INSERT INTO meetings (
+      date, meeting_type, presiding, conducting, announcements,
+      opening_hymn, opening_prayer, ward_business, stake_business,
+      sacrament_hymn, speakers, closing_hymn, closing_prayer
+    ) VALUES (
+      ${meeting.date}, ${meeting.meetingType}, ${meeting.presiding}, ${meeting.conducting}, ${meeting.announcements ?? []},
+      ${JSON.stringify(meeting.openingHymn)}::jsonb, ${meeting.openingPrayer}, ${JSON.stringify(meeting.wardBusiness)}::jsonb, ${meeting.stakeBusiness},
+      ${JSON.stringify(meeting.sacramentHymn)}::jsonb, ${JSON.stringify(meeting.speakers)}::jsonb, ${JSON.stringify(meeting.closingHymn)}::jsonb, ${meeting.closingPrayer}
+    )
+    RETURNING *
+  `) as MeetingRow[];
 
-export async function addMeeting(_meeting: Omit<SacramentMeeting, 'id'>): Promise<SacramentMeeting> {
-  throw new Error('addMeeting is not implemented yet.');
+  return mapRowToMeeting(rows[0]);
 }
+
+const MEETING_COLUMNS: Record<keyof Omit<SacramentMeeting, 'id'>, string> = {
+  date: 'date',
+  meetingType: 'meeting_type',
+  presiding: 'presiding',
+  conducting: 'conducting',
+  announcements: 'announcements',
+  openingHymn: 'opening_hymn',
+  openingPrayer: 'opening_prayer',
+  wardBusiness: 'ward_business',
+  stakeBusiness: 'stake_business',
+  sacramentHymn: 'sacrament_hymn',
+  speakers: 'speakers',
+  closingHymn: 'closing_hymn',
+  closingPrayer: 'closing_prayer',
+};
+
+const JSONB_COLUMNS = new Set<keyof Omit<SacramentMeeting, 'id'>>([
+  'openingHymn',
+  'wardBusiness',
+  'sacramentHymn',
+  'speakers',
+  'closingHymn',
+]);
 
 export async function updateMeeting(
-  _id: number,
-  _meeting: Partial<Omit<SacramentMeeting, 'id'>>
+  id: number,
+  meeting: Partial<Omit<SacramentMeeting, 'id'>>
 ): Promise<SacramentMeeting> {
-  throw new Error('updateMeeting is not implemented yet.');
+  const entries = Object.entries(meeting) as [keyof Omit<SacramentMeeting, 'id'>, unknown][];
+
+  if (entries.length === 0) {
+    const existing = await getMeetingById(id);
+    if (!existing) throw new Error('Meeting not found.');
+    return existing;
+  }
+
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  entries.forEach(([key, value]) => {
+    const column = MEETING_COLUMNS[key];
+    params.push(JSONB_COLUMNS.has(key) ? JSON.stringify(value) : value);
+    setClauses.push(JSONB_COLUMNS.has(key) ? `${column} = $${params.length}::jsonb` : `${column} = $${params.length}`);
+  });
+
+  params.push(id);
+
+  const rows = (await sql().query(
+    `UPDATE meetings SET ${setClauses.join(', ')} WHERE id = $${params.length} RETURNING *`,
+    params
+  )) as MeetingRow[];
+
+  if (rows.length === 0) {
+    throw new Error('Meeting not found.');
+  }
+
+  return mapRowToMeeting(rows[0]);
 }
 
-export async function deleteMeeting(_id: number): Promise<void> {
-  throw new Error('deleteMeeting is not implemented yet.');
+export async function deleteMeeting(id: number): Promise<void> {
+  await sql()`DELETE FROM meetings WHERE id = ${id}`;
 }

@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/', label: 'Home' },
   { href: '/meetings', label: 'All Meetings' },
   { href: '/meetings/current', label: 'This Week' },
+  { href: '/meetings/manage', label: 'Manage' },
 ];
 
 export default function NavLinks() {
