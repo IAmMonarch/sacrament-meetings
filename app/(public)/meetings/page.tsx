@@ -10,12 +10,12 @@ interface MeetingsPageProps {
 export default async function MeetingsPage({ searchParams }: MeetingsPageProps) {
   const resolvedSearchParams = await searchParams;
   const query = resolvedSearchParams?.query ?? '';
-  const currentPage = Number(resolvedSearchParams?.page) || 1;
+  const requestedPage = Number(resolvedSearchParams?.page) || 1;
 
-  const [meetings, totalPages] = await Promise.all([
-    getMeetings(query, currentPage),
-    getMeetingsTotalPages(query),
-  ]);
+  const totalPages = await getMeetingsTotalPages(query);
+  const currentPage = Math.min(Math.max(requestedPage, 1), totalPages);
+
+  const meetings = await getMeetings(query, currentPage);
 
   return (
     <div>
