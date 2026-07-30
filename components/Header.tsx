@@ -1,9 +1,13 @@
 import Link from 'next/link';
 import NavLinks from './NavLinks';
+import { auth } from '@/auth';
 
 const WARD_NAME = 'Maple Grove Ward';
 
-export default function Header() {
+export default async function Header() {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -20,8 +24,9 @@ export default function Header() {
           </Link>
           <p className="text-sm text-muted">{today}</p>
         </div>
-        <NavLinks />
+        <NavLinks isLoggedIn={isLoggedIn} />
       </div>
     </header>
   );
 }
+

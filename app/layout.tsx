@@ -15,8 +15,30 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Sacrament Meeting Planner",
-  description: "Plan, manage, and review sacrament meeting agendas.",
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : 'http://localhost:3000'
+  ),
+  title: {
+    default: "Sacrament Meeting Planner",
+    template: "%s | Sacrament Meeting Planner",
+  },
+  description: "Plan, manage, and review sacrament meeting agendas for the ward.",
+  openGraph: {
+    title: "Sacrament Meeting Planner",
+    description: "Plan, manage, and review sacrament meeting agendas for the ward.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Sacrament Meeting Planner Open Graph Banner",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

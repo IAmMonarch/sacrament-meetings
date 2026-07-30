@@ -3,12 +3,41 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { auth, signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 import {
   addMeeting,
   deleteMeeting as deleteMeetingRecord,
   updateMeeting as updateMeetingRecord,
 } from './meetings-db';
 import type { SacramentMeeting } from './types';
+
+async function requireAuth() {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error('Not authenticated');
+  }
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData
+): Promise<string | undefined> {
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid email or password.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
+}
+
 
 const MEETING_TYPES = ['testimony', 'regular', 'stake', 'general', 'special'] as const;
 
@@ -124,6 +153,7 @@ export async function createMeeting(
   _prevState: MeetingFormState,
   formData: FormData
 ): Promise<MeetingFormState> {
+  await requireAuth();
   const parsed = MeetingFormSchema.safeParse(readRawFormData(formData));
 
   if (!parsed.success) {
@@ -151,6 +181,7 @@ export async function updateMeeting(
   _prevState: MeetingFormState,
   formData: FormData
 ): Promise<MeetingFormState> {
+  await requireAuth();
   const parsed = MeetingFormSchema.safeParse(readRawFormData(formData));
 
   if (!parsed.success) {
@@ -174,6 +205,7 @@ export async function updateMeeting(
 }
 
 export async function deleteMeeting(id: number): Promise<void> {
+  await requireAuth();
   try {
     await deleteMeetingRecord(id);
   } catch (error) {
@@ -184,3 +216,5 @@ export async function deleteMeeting(id: number): Promise<void> {
   revalidatePath('/meetings');
   redirect('/meetings');
 }
+
+

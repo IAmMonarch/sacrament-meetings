@@ -2,20 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import SignOutButton from './SignOutButton';
 
-const LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/meetings', label: 'All Meetings' },
-  { href: '/meetings/current', label: 'This Week' },
-  { href: '/meetings/manage', label: 'Manage' },
-];
-
-export default function NavLinks() {
+export default function NavLinks({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname();
 
+  const links = [
+    { href: '/', label: 'Home' },
+    { href: '/meetings', label: 'All Meetings' },
+    { href: '/meetings/current', label: 'This Week' },
+  ];
+
+  if (isLoggedIn) {
+    links.push({ href: '/meetings/manage', label: 'Manage' });
+  }
+
   return (
-    <nav aria-label="Primary" className="flex gap-4">
-      {LINKS.map((link) => {
+    <nav aria-label="Primary" className="flex items-center gap-4">
+      {links.map((link) => {
         const isActive =
           link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
 
@@ -34,6 +38,21 @@ export default function NavLinks() {
           </Link>
         );
       })}
+      {isLoggedIn ? (
+        <SignOutButton />
+      ) : (
+        <Link
+          href="/login"
+          className={`text-sm font-medium transition-colors hover:text-accent ${
+            pathname === '/login'
+              ? 'text-accent underline underline-offset-4'
+              : 'text-foreground'
+          }`}
+        >
+          Sign In
+        </Link>
+      )}
     </nav>
   );
 }
+
